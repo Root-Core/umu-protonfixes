@@ -147,6 +147,12 @@ def protonprefix() -> Path:
 
 
 @functools.lru_cache
+def get_path_syswow64() -> Path:
+    """Returns the syswow64's path in the prefix"""
+    return protonprefix() / 'drive_c/windows/syswow64'
+
+
+@functools.lru_cache
 def which(appname: str) -> Optional[str]:
     """Returns the full path of an executable in $PATH"""
     for path in os.environ['PATH'].split(os.pathsep):
@@ -655,7 +661,7 @@ def disable_uplay_overlay() -> bool:
 
 
 def create_dosbox_conf(
-    conf_file: StrPath, conf_dict: Mapping[str, Mapping[str, Any]]
+    conf_path: StrPath, conf_dict: Mapping[str, Mapping[str, Any]]
 ) -> None:
     """Create DOSBox configuration file.
 
@@ -663,7 +669,7 @@ def create_dosbox_conf(
     option;, each subsequent one overwrites settings defined in
     previous files.
     """
-    conf_file = Path(conf_file)
+    conf_file = Path(conf_path)
     if conf_file.is_file():
         return
     conf = configparser.ConfigParser()
@@ -880,7 +886,7 @@ def install_battleye_runtime() -> None:
     install_app('1161040')
 
 
-def install_all_from_tgz(url: str, path: Path = get_game_install_path()) -> None:
+def install_all_from_tgz(url: str, path: StrPath = get_game_install_path()) -> None:
     """Install all files from a downloaded tar.gz"""
     config.path.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1178,3 +1184,34 @@ def create_dos_device(
         'HKLM\\Software\\Wine\\Drives', f'{letter}:', 'REG_SZ', dev_type.value, True
     )
     return True
+
+
+def patch_conf_value(file: Path, key: str, value: ReplaceType) -> None:
+    """Patches a single value in the given config file
+
+    Args:
+        file (Path): Path to the config file to patch
+        key (str): The key of the value to patch
+        value (ReplaceType): The value that should be replaced
+
+    """
+    if not file.is_file():
+        log.warn(f'File "{file}" can not be opened to patch config value.')
+        return
+
+    conf = file.read_text()
+    regex = rf"^\s*(?P<name>{key}\s*=\s*)(?P<value>{value.from_value})\s*$"
+    conf = re.sub(regex, rf'\g<name>{value.to_value}', conf, flags=re.MULTILINE)
+    file.write_text(conf)
+
+
+def patch_voodoo_conf(file: Path = get_path_syswow64() / 'dgvoodoo.conf', key: str = 'Resolution', value: ReplaceType = ReplaceType('unforced', 'max')) -> None:
+    """Patches the dgVoodoo2 config file. By default `Resolution` will be set from `unforced` to `max`.
+
+    Args:
+        file (Path, optional): Path to the config file to patch
+        key (str, optional): The key of the value to patch
+        value (ReplaceType, optional): The value that should be replaced
+
+    """
+    patch_conf_value(file, key, value)

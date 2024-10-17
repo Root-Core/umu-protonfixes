@@ -50,6 +50,7 @@ class Steam:
 
         client.anonymous_login()
 
+
     def get_valid_appids(self, appids: set[int]) -> set[int]:
         """Queries Steam for the specified appids.
 

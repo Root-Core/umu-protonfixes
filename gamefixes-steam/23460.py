@@ -3,8 +3,7 @@ Works with dotnet35sp1 only, now without needing Proton5
 Videos still don't work.
 """
 
-import os
-import subprocess
+from pathlib import Path
 from protonfixes import util
 
 
@@ -15,5 +14,6 @@ def main() -> None:
     # Videos play and audio works but screen is black.
     # util.protontricks('quartz')
     # util.protontricks('klite')
-    if os.path.isdir('./data/shared/videos'):
-        subprocess.call(['mv', './data/shared/videos', './data/shared/_videos'])
+    video_path = Path('data/shared/videos')
+    if video_path.is_dir():
+        video_path.rename(video_path.with_name('_videos'))

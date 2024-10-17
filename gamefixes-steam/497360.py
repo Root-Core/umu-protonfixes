@@ -6,8 +6,6 @@ Fixes email issues in Sydney
 Widescreen supported (16:9/21:9, 32:9 not tested)
 """
 
-import os
-import subprocess
 from protonfixes import util
 
 
@@ -22,7 +20,6 @@ def main() -> None:
     # util.protontricks('lavfilters')
     # Show videos but green background is visible
     util.protontricks('klite')
-    syswow64 = os.path.join(util.protonprefix(), 'drive_c/windows/syswow64')
 
     # Everything after this call should only be executed once
     if not util.protontricks('dgvoodoo2'):
@@ -37,18 +34,8 @@ def main() -> None:
     width = int(screen_width / screen_height * 768 // 1)
 
     # dgvoodoo2 config patches
-    subprocess.call(
-        [
-            f"sed -i '/[DirectX]/ {{/Resolution/s/max/{width}x768/}}' {syswow64}/dgvoodoo.conf"
-        ],
-        shell=True,
-    )
-    subprocess.call(
-        [
-            f"sed -i '/[DirectXExt]/ {{/ExtraEnumeratedResolutions/s/= /= {width}x768,/}}' {syswow64}/dgvoodoo.conf"
-        ],
-        shell=True,
-    )
+    util.patch_voodoo_conf(value=util.ReplaceType('max', f'{width}x768/'))
+    util.patch_voodoo_conf(value=util.ReplaceType('', f'{width}x768/,'), key='ExtraEnumeratedResolutions')
 
     # Registry
     util.regedit_add('HKCU\\Software\\Sierra On-Line')
