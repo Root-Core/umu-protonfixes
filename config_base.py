@@ -116,6 +116,9 @@ class ConfigBase:
             parser = ConfigParser()
             parser.read(file)
 
+            # Add additional boolean states
+            parser.BOOLEAN_STATES.update({'y': True, 'n': False})
+
             # Iterate over local config section objects
             for section_name, section in self.__dict__.items():
                 if not parser.has_section(section_name):
